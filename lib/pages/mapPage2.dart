@@ -1,10 +1,9 @@
 // ignore_for_file: file_names, unnecessary_new, prefer_final_fields, no_leading_underscores_for_local_identifiers, avoid_init_to_null, avoid_print, unused_import, avoid_function_literals_in_foreach_calls
 import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
-import 'package:googlemap/consts.dart';
+import 'package:googlemap/pages/consts.dart';
 import 'package:location/location.dart';
 
 class MapPage2 extends StatefulWidget {
@@ -109,25 +108,24 @@ class _MapPage2State extends State<MapPage2> {
     });
   }
 
-  // Future<List<LatLng>> getPolylinePoints() async {
-  //   List<LatLng> polylineCoordinates = [];
-  //   PolylinePoints polylinePoints = PolylinePoints();
-  //   PolylineResult result = await polylinePoints.getRouteBetweenCoordinates(
-  //     googleApiKey: GOOGLE_MAP_API_KEY,
-  //     request: PolylineRequest(
-  //       origin: PointLatLng(_pGooglePlex.latitude, _pGooglePlex.longitude),
-  //       destination: PointLatLng(_pApplePark.latitude, _pApplePark.longitude),
-  //       mode: TravelMode.driving,
-  //       // wayPoints: [PolylineWayPoint(location: "Sabo, Yaba Lagos Nigeria")],
-  //     ),
-  //   );
-  //   if (result.points.isNotEmpty) {
-  //     result.points.forEach((PointLatLng point) {
-  //       polylineCoordinates.add(LatLng(point.latitude, point.longitude));
-  //     });
-  //   } else {
-  //     print(result.errorMessage);
-  //   }
-  //   return polylineCoordinates;
-  // }
+  Future<List<LatLng>> getPolylinePoints() async {
+    List<LatLng> polylineCoordinates = [];
+    PolylinePoints polylinePoints = PolylinePoints();
+    PolylineResult result = await polylinePoints.getRouteBetweenCoordinates(
+      googleApiKey: GOOGLE_MAP_API_KEY,
+      request: PolylineRequest(
+        origin: PointLatLng(_pGooglePlex.latitude, _pGooglePlex.longitude),
+        destination: PointLatLng(_pApplePark.latitude, _pApplePark.longitude),
+        mode: TravelMode.driving,
+      ),
+    );
+    if (result.points.isNotEmpty) {
+      result.points.forEach((PointLatLng point) {
+        polylineCoordinates.add(LatLng(point.latitude, point.longitude));
+      });
+    } else {
+      print(result.errorMessage);
+    }
+    return polylineCoordinates;
+  }
 }

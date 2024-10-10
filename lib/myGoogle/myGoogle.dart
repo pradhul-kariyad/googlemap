@@ -1,8 +1,7 @@
-// ignore_for_file: file_names, avoid_print
 import 'package:flutter/material.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:googlemap/pages/consts.dart';
+import 'package:googlemap/pages/consts.dart'; // Ensure your Google API key is here
 import 'package:location/location.dart';
 
 class MyGoogle extends StatefulWidget {
@@ -14,17 +13,15 @@ class MyGoogle extends StatefulWidget {
 
 class _MyGoogleState extends State<MyGoogle> {
   final locationController = Location();
-  static const mountainView = LatLng(11.8745, 75.3704);
-
+  static const mountainView = LatLng(11.8745, 75.3704); // Thalassery location
   LatLng? currentPosition;
-  Map<PolylineId, Polyline> polylines = {};
+  Map<PolylineId, Polyline> polylines = {}; // Stores all polylines
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await fetchLocationUpdates();
-      await updatePolyline();
     });
   }
 
@@ -32,15 +29,11 @@ class _MyGoogleState extends State<MyGoogle> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: currentPosition == null
-          ? const Center(
-              child:
-                  CircularProgressIndicator()) 
+          ? const Center(child: CircularProgressIndicator())
           : GoogleMap(
-              mapType: MapType
-                  .normal,
+              mapType: MapType.normal,
               initialCameraPosition: CameraPosition(
-                target: currentPosition ??
-                    mountainView, 
+                target: currentPosition ?? mountainView,
                 zoom: 13,
               ),
               markers: {
@@ -55,7 +48,8 @@ class _MyGoogleState extends State<MyGoogle> {
                   position: mountainView,
                 ),
               },
-              polylines: Set<Polyline>.of(polylines.values),
+              polylines:
+                  Set<Polyline>.of(polylines.values), // Display all polylines
             ),
     );
   }
@@ -64,6 +58,7 @@ class _MyGoogleState extends State<MyGoogle> {
     bool serviceEnabled;
     PermissionStatus permissionGranted;
 
+    // Check location service and permissions
     serviceEnabled = await locationController.serviceEnabled();
     if (!serviceEnabled) {
       serviceEnabled = await locationController.requestService();
@@ -88,40 +83,52 @@ class _MyGoogleState extends State<MyGoogle> {
         currentPosition = LatLng(location.latitude!, location.longitude!);
       });
       print("Initial Location: $currentPosition");
+
+      // Update polyline after setting the initial location
+      await updatePolyline();
     }
 
     locationController.onLocationChanged.listen((currentLocation) {
       if (currentLocation.latitude != null &&
           currentLocation.longitude != null) {
         setState(() {
-          currentPosition = LatLng(
-            currentLocation.latitude!,
-            currentLocation.longitude!,
-          );
+          currentPosition =
+              LatLng(currentLocation.latitude!, currentLocation.longitude!);
         });
         print("Updated Location: $currentPosition");
-        updatePolyline(); // Update the polyline on each location change
+
+        // Update polyline on location change
+        updatePolyline();
       }
     });
   }
 
   Future<void> updatePolyline() async {
     if (currentPosition == null) return;
-    final polylinePoints = PolylinePoints();
-    final result = await polylinePoints.getRouteBetweenCoordinates(
+
+    LatLng origin = currentPosition!;
+    LatLng destination = mountainView; 
+
+    PolylinePoints polylinePoints = PolylinePoints();
+    PolylineResult result = await polylinePoints.getRouteBetweenCoordinates(
       googleApiKey: GOOGLE_MAP_API_KEY,
       request: PolylineRequest(
-        origin:
-            PointLatLng(currentPosition!.latitude, currentPosition!.longitude),
-        destination: PointLatLng(mountainView.latitude, mountainView.longitude),
+        origin: PointLatLng(origin.latitude, origin.longitude),
+        destination: PointLatLng(destination.latitude, destination.longitude),
         mode: TravelMode.driving,
+        wayPoints: [
+          PolylineWayPoint(location: "Sabo, Yaba Lagos Nigeria")
+        ],
       ),
     );
 
-    if (result.points.isNotEmpty) {
+    // Check if points were returned
+    if (result.status == 'OK') {
       final polylineCoordinates = result.points
           .map((point) => LatLng(point.latitude, point.longitude))
           .toList();
+
+      // Generate the polyline from the fetched points
       generatePolylineFromPoints(polylineCoordinates);
     } else {
       debugPrint("Error fetching polyline points: ${result.errorMessage}");
@@ -133,13 +140,17 @@ class _MyGoogleState extends State<MyGoogle> {
 
     final polyline = Polyline(
       polylineId: id,
-      color: Colors.blue.withOpacity(1.0), // Ensure the color is fully opaque
+      color: Colors.red
+          .withOpacity(0.9), // Changed color to red for better visibility
       points: polylineCoordinates,
-      width: 10, // Increase the width for better visibility
+      width: 6, // Adjusted width to 6 for better line appearance
+      startCap: Cap.roundCap, // Smooth polyline start
+      endCap: Cap.roundCap, // Smooth polyline end
+      patterns: [PatternItem.dot, PatternItem.gap(10)], // Added dashed pattern
     );
 
     setState(() {
-      polylines[id] = polyline;
+      polylines[id] = polyline; // Store polyline in the map
     });
   }
 }

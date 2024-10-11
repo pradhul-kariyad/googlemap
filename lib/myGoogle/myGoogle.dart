@@ -107,6 +107,8 @@ class _MyGoogleState extends State<MyGoogle> {
     if (currentPosition == null) return;
 
     LatLng origin = currentPosition!;
+
+    
     LatLng destination = mountainView; 
 
     PolylinePoints polylinePoints = PolylinePoints();
